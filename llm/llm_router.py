@@ -1,10 +1,9 @@
 # llm/llm_router.py
 
-import json
-from .gemini_client import get_gemini_client
+from llm.gemini_client import get_gemini_client
+
 
 def route_llm(query, specialties, doctor_names, business_units):
-
     instructions = f"""
     You are an assistant that must classify Arabic user queries.
 
@@ -20,15 +19,19 @@ def route_llm(query, specialties, doctor_names, business_units):
     {business_units}
 
     If the query contains a symptom or medical complaint but NO specialty,
-    classify the complaint to the closest specialty and call the function.
+    classify the complaint to the closest specialty.
 
-    ALWAYS call the function `search_doctor` if ANY doctor/specialty/BU is detected or inferred.
+    ALWAYS call the function `search_doctors`
+    if ANY doctor/specialty/BU is detected or inferred.
 
-    If the query is general (like: شكراً – كيفك) → DO NOT call any function.
+    If the query is general (e.g., شكراً – ازيك – تمام؟)
+    → DO NOT call any function.
     """
 
     client = get_gemini_client()
 
-    response = client.generate_content([instructions, query])
+    response = client.generate_content(
+        [instructions, query],
+    )
 
     return response

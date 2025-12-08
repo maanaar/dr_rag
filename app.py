@@ -13,30 +13,37 @@ from search.search_functions import execute_search
 # Load and prepare data
 df = load_doctor_data()
 specialties = extract_context_specialties(df)
+print(specialties)
 doctor_names = extract_context_doctors(df)
 business_units = extract_context_business_units(df)
 
 
 def handle_user_query(query):
-    query_norm = normalize_query(query)
+    response = route_llm(query, specialties, doctor_names, business_units)
+    print(response)
+    # 1) If the model is calling a function
+    fc = response.candidates[0].content.parts[0].function_call
+    if fc:
+        fn_name = fc.name
+        args = fc.args
 
-    response = route_llm(query_norm, specialties, doctor_names, business_units)
+        if fn_name == "search_doctors":
+            return execute_search(df,args)
 
-    # No function call → LLM normal reply
-    if not response.candidates[0].content.parts:
+    # 2) Otherwise return model text
+    try:
         return response.text
+    except:
+        return "⚠ لا يوجد نص في الرد."
 
-    part = response.candidates[0].content.parts[0]
 
-    if part.function_call:
-        fn_name = part.function_call.name
-        args = part.function_call.args
+# def run_search_doctors(args):
+#     doctor_name = args.get("doctor_name")
+#     speciality = args.get("speciality")
+#     business_unit = args.get("business_unit")
 
-        results = execute_search(df, args)
-        return results
-
-    return response.text
-
+#     # Call your search logic
+#     return execute_search(doctor_name, speciality, business_unit)
 
 # Example
 if __name__ == "__main__":

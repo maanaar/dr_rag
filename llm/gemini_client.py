@@ -7,21 +7,30 @@ load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
+# --------------------------
+#   DEFINE TOOL FUNCTION
+# --------------------------
+def search_doctors(
+    doctor_name: str = None,
+    speciality: str = None,
+    business_unit: str = None
+):
+    """
+    Gemini will call this function automatically.
+    Your real implementation will be inside app.py or another handler.
+    """
+    return {
+        "doctor_name": doctor_name,
+        "speciality": speciality,
+        "business_unit": business_unit
+    }
+
+
+# --------------------------
+#   RETURN MODEL WITH TOOLS
+# --------------------------
 def get_gemini_client():
     return genai.GenerativeModel(
         model_name="gemini-2.5-flash",
-        tools=[
-            {
-                "name": "search_doctor",
-                "description": "Search doctors by name, specialty, or business unit",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "doctor_name": {"type": "string"},
-                        "specialty": {"type": "string"},
-                        "business_unit": {"type": "string"},
-                    },
-                },
-            }
-        ]
+        tools=[search_doctors]   
     )
