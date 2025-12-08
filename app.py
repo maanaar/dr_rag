@@ -32,6 +32,7 @@ def handle_user_query(query):
 
     # 2) Otherwise return model text
     try:
+        print(response.text)
         return response.text
     except:
         return "⚠ لا يوجد نص في الرد."
