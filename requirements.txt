@@ -10,3 +10,4 @@ uvicorn
 regex
 
 tqdm
+rapidfuzz
