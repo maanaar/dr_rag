@@ -11,7 +11,6 @@ def load_doctor_data(path="data/KSA_Doctors.xlsx"):
 
     df["Doctor Name"] = df["Doctor Name Ar"].apply(clean_text)
     df["Speciality Description Arabic"] = df["Specialty: ArabicName"].apply(clean_text)
-
     # Business Unit Expansion
     df["BU Arabic List"] = df["Business Unit"].apply(expand_business_units)
 
@@ -19,9 +18,17 @@ def load_doctor_data(path="data/KSA_Doctors.xlsx"):
 
 
 def extract_context_specialties(df):
-    """Return unique list of specialties for LLM"""
+    """Return clean list of specialties without the ID"""
     specialties = df["Speciality Description Arabic"].unique().tolist()
-    return [s for s in specialties if s.strip()]
+    
+    cleaned = []
+    for s in specialties:
+        if not s.strip():
+            continue
+        # خذ الجزء قبل ;
+        main_speciality = s.split(";")[0].strip()
+        cleaned.append(main_speciality)
+    return cleaned
 
 
 def extract_context_doctors(df):
