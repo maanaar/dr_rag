@@ -1,36 +1,33 @@
-# llm/gemini_client.py
 import os
 from google import generativeai as genai
+from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# Initialize Gemini client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-# --------------------------
-#   DEFINE TOOL FUNCTION
-# --------------------------
-def search_doctors(
-    doctor_name: str = None,
-    speciality: str = None,
-    business_unit: str = None
-):
-    """
-    Gemini will call this function automatically.
-    Your real implementation will be inside app.py or another handler.
-    """
-    return {
-        "doctor_name": doctor_name,
-        "speciality": speciality,
-        "business_unit": business_unit
+# Function declaration for doctor search
+search_doctors_function = {
+    "name": "search_doctors",
+    "description": "Search doctors by name, specialty, or business unit",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "doctor_name": {"type": "string"},
+            "speciality": {"type": "string"},
+            "business_unit": {"type": "string"},
+        },
+        "required": []  # all optional
     }
+}
+
+# Create tool
+search_tool = types.Tool(function_declarations=[search_doctors_function])
+config = types.GenerateContentConfig(tools=[search_tool])
 
 
-# --------------------------
-#   RETURN MODEL WITH TOOLS
-# --------------------------
 def get_gemini_client():
-    return genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
-        tools=[search_doctors]   
-    )
+    """Return Gemini client and tool config"""
+    return client, config
