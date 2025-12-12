@@ -2,7 +2,7 @@ pandas
 openpyxl
 python-dotenv
 
-google-genai
+openai
 
 fastapi
 uvicorn

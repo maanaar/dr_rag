@@ -13,6 +13,11 @@ def load_doctor_data(path="data/KSA_Doctors.xlsx"):
     df["Speciality Description Arabic"] = df["Specialty: ArabicName"].apply(clean_text)
     # Business Unit Expansion
     df["BU Arabic List"] = df["Business Unit"].apply(expand_business_units)
+    # Scope of Service (Arabic)
+    df["Scope of Service Arabic"] = df["Scope of Service(AR)"].apply(clean_text)
+    # Keep DR Notes as is (for booking)
+    if "DR Notes" in df.columns:
+        df["DR Notes"] = df["DR Notes"].fillna("")
 
     return df
 
