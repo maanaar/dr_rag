@@ -136,11 +136,11 @@ def calculate_similarity_score(row: pd.Series, query: str, args: Dict[str, str])
     return normalized_score
 
 
-def execute_search(df: pd.DataFrame, args: Dict[str, str], user_query: str = "", offset: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
+def execute_search(df: pd.DataFrame, args: Dict[str, str], user_query: str = "") -> List[Dict[str, Any]]:
     """
     Execute search with provided filters using fuzzy matching.
     Ranks results by similarity to user query.
-    Returns list of matching doctor records sorted by relevance.
+    Returns top 10+ results (all results with similarity score >= 50) sorted by relevance.
     """
     if df.empty:
         return []
@@ -196,21 +196,21 @@ def execute_search(df: pd.DataFrame, args: Dict[str, str], user_query: str = "",
         )
         # Sort by score descending
         filtered_df = filtered_df.sort_values('_similarity_score', ascending=False)
+        # Get top 10 results, but include all results with score >= 50 if more than 10
+        # First, get all results with score >= 50
+        high_score_results = filtered_df[filtered_df['_similarity_score'] >= 50]
+        
+        if len(high_score_results) >= 10:
+            # If 10+ results with score >= 50, return all of them
+            filtered_df = high_score_results
+        else:
+            # If less than 10 with score >= 50, take top 10 by score (may include some < 50)
+            filtered_df = filtered_df.head(10)
+        
         # Remove the score column before returning
         filtered_df = filtered_df.drop(columns=['_similarity_score'])
     
-    # Apply pagination
-    total_results = len(filtered_df)
-    start_idx = offset
-    end_idx = offset + limit
-    paginated_df = filtered_df.iloc[start_idx:end_idx]
-    
-    results = paginated_df.to_dict(orient="records")
-    
-    # Add metadata about pagination
-    for result in results:
-        result['_total_results'] = total_results
-        result['_current_offset'] = offset
-        result['_has_more'] = end_idx < total_results
+    # Convert to list of dicts
+    results = filtered_df.to_dict(orient="records")
     
     return results
