@@ -96,31 +96,31 @@ def book_appointment(doctor_name: str, patient_name: str, patient_phone: str,
         # Get doctor notes
         dr_notes = get_doctor_notes(df, doctor_name)
         
-        # Validate booking against DR Notes if they exist
-        validation_result = None
-        if dr_notes:
-            validation_result = validate_booking_against_notes(
-                appointment_date, appointment_time, dr_notes
-            )
+        # # Validate booking against DR Notes if they exist
+        # validation_result = None
+        # if dr_notes:
+        #     validation_result = validate_booking_against_notes(
+        #         appointment_date, appointment_time, dr_notes
+        #     )
             
-            # If validation fails, return error with suggestions
-            if not validation_result["valid"]:
-                suggestions_text = ""
-                if validation_result.get("suggestions"):
-                    if ":" in str(validation_result["suggestions"][0]):
-                        # Time suggestions
-                        suggestions_text = f"\n\nالأوقات المتاحة:\n" + "\n".join([f"- {t}" for t in validation_result["suggestions"]])
-                    else:
-                        # Date suggestions
-                        suggestions_text = f"\n\nالتواريخ المتاحة:\n" + "\n".join([f"- {d}" for d in validation_result["suggestions"]])
+        #     # If validation fails, return error with suggestions
+        #     if not validation_result["valid"]:
+        #         suggestions_text = ""
+        #         if validation_result.get("suggestions"):
+        #             if ":" in str(validation_result["suggestions"][0]):
+        #                 # Time suggestions
+        #                 suggestions_text = f"\n\nالأوقات المتاحة:\n" + "\n".join([f"- {t}" for t in validation_result["suggestions"]])
+        #             else:
+        #                 # Date suggestions
+        #                 suggestions_text = f"\n\nالتواريخ المتاحة:\n" + "\n".join([f"- {d}" for d in validation_result["suggestions"]])
                 
-                return {
-                    "success": False,
-                    "error": "validation_failed",
-                    "message": validation_result["message"] + suggestions_text,
-                    "suggestions": validation_result.get("suggestions", []),
-                    "dr_notes": dr_notes
-                }
+        #         return {
+        #             "success": False,
+        #             "error": "validation_failed",
+        #             "message": validation_result["message"] + suggestions_text,
+        #             "suggestions": validation_result.get("suggestions", []),
+        #             "dr_notes": dr_notes
+        #         }
         
         # Create appointments file if it doesn't exist
         create_appointments_file_if_not_exists()
@@ -154,9 +154,9 @@ def book_appointment(doctor_name: str, patient_name: str, patient_phone: str,
         # Save to Excel
         appointments_df.to_excel(str(APPOINTMENTS_FILE), index=False)
         
-        validation_msg = ""
-        if validation_result and validation_result["valid"]:
-            validation_msg = f"\n✓ تم التحقق من التوافق مع ملاحظات الطبيب."
+        # validation_msg = ""
+        # if validation_result and validation_result["valid"]:
+        #     validation_msg = f"\n✓ تم التحقق من التوافق مع ملاحظات الطبيب."
         
         return {
             "success": True,
@@ -166,7 +166,7 @@ def book_appointment(doctor_name: str, patient_name: str, patient_phone: str,
             "appointment_date": appointment_date,
             "appointment_time": appointment_time,
             "dr_notes": dr_notes,
-            "message": f"تم حجز الموعد بنجاح! رقم الحجز: {appointment_id}{validation_msg}"
+            "message": f"تم حجز الموعد بنجاح! رقم الحجز: {appointment_id}"
         }
     
     except Exception as e:
@@ -209,59 +209,59 @@ def parse_booking_info_from_notes(dr_notes: str) -> Dict[str, Any]:
         "contact_info": ""
     }
     
-    # Extract dates (various formats)
-    date_patterns = [
-        r'(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})',  # DD/MM/YYYY or DD-MM-YYYY
-        r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})',  # YYYY/MM/DD
-        r'يوم\s*(\d{1,2})[/-](\d{1,2})',  # يوم DD/MM
-    ]
+    # # Extract dates (various formats)
+    # date_patterns = [
+    #     r'(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})',  # DD/MM/YYYY or DD-MM-YYYY
+    #     r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})',  # YYYY/MM/DD
+    #     r'يوم\s*(\d{1,2})[/-](\d{1,2})',  # يوم DD/MM
+    # ]
     
-    # Extract times (HH:MM format)
-    time_patterns = [
-        r'(\d{1,2}):(\d{2})',  # HH:MM
-        r'(\d{1,2})\s*ساعة',  # HH ساعة
-        r'من\s*(\d{1,2})\s*إلى\s*(\d{1,2})',  # من HH إلى HH
-    ]
+    # # Extract times (HH:MM format)
+    # time_patterns = [
+    #     r'(\d{1,2}):(\d{2})',  # HH:MM
+    #     r'(\d{1,2})\s*ساعة',  # HH ساعة
+    #     r'من\s*(\d{1,2})\s*إلى\s*(\d{1,2})',  # من HH إلى HH
+    # ]
     
-    # Look for available dates
-    for pattern in date_patterns:
-        matches = re.findall(pattern, notes)
-        for match in matches:
-            try:
-                if len(match) == 3:
-                    if len(match[2]) == 2:
-                        year = 2000 + int(match[2])
-                    else:
-                        year = int(match[2])
-                    month = int(match[1])
-                    day = int(match[0])
-                    date_str = f"{year}-{month:02d}-{day:02d}"
-                    info["available_dates"].append(date_str)
-                    info["has_restrictions"] = True
-            except:
-                pass
+    # # Look for available dates
+    # for pattern in date_patterns:
+    #     matches = re.findall(pattern, notes)
+    #     for match in matches:
+    #         try:
+    #             if len(match) == 3:
+    #                 if len(match[2]) == 2:
+    #                     year = 2000 + int(match[2])
+    #                 else:
+    #                     year = int(match[2])
+    #                 month = int(match[1])
+    #                 day = int(match[0])
+    #                 date_str = f"{year}-{month:02d}-{day:02d}"
+    #                 info["available_dates"].append(date_str)
+    #                 info["has_restrictions"] = True
+    #         except:
+    #             pass
     
-    # Look for available times
-    for pattern in time_patterns:
-        matches = re.findall(pattern, notes)
-        for match in matches:
-            try:
-                if isinstance(match, tuple):
-                    if len(match) == 2:
-                        # Time range
-                        start_hour = int(match[0])
-                        end_hour = int(match[1])
-                        for hour in range(start_hour, end_hour + 1):
-                            info["available_times"].append(f"{hour:02d}:00")
-                    else:
-                        hour = int(match[0])
-                        info["available_times"].append(f"{hour:02d}:00")
-                else:
-                    hour = int(match)
-                    info["available_times"].append(f"{hour:02d}:00")
-                info["has_restrictions"] = True
-            except:
-                pass
+    # # Look for available times
+    # for pattern in time_patterns:
+    #     matches = re.findall(pattern, notes)
+    #     for match in matches:
+    #         try:
+    #             if isinstance(match, tuple):
+    #                 if len(match) == 2:
+    #                     # Time range
+    #                     start_hour = int(match[0])
+    #                     end_hour = int(match[1])
+    #                     for hour in range(start_hour, end_hour + 1):
+    #                         info["available_times"].append(f"{hour:02d}:00")
+    #                 else:
+    #                     hour = int(match[0])
+    #                     info["available_times"].append(f"{hour:02d}:00")
+    #             else:
+    #                 hour = int(match)
+    #                 info["available_times"].append(f"{hour:02d}:00")
+    #             info["has_restrictions"] = True
+    #         except:
+    #             pass
     
     # Look for restricted days (like "لا حجز يوم الجمعة")
     restricted_days = {
@@ -288,7 +288,7 @@ def parse_booking_info_from_notes(dr_notes: str) -> Dict[str, Any]:
     return info
 
 
-def validate_booking_against_notes(requested_date: str, requested_time: str, dr_notes: str) -> Dict[str, Any]:
+# def validate_booking_against_notes(requested_date: str, requested_time: str, dr_notes: str) -> Dict[str, Any]:
     """
     Validate if the requested booking matches DR Notes restrictions.
     

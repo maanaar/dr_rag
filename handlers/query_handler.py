@@ -9,6 +9,17 @@ from handlers.search_handler import handle_search
 from handlers.booking_request_handler import handle_booking
 
 
+def is_function_call_content(content: str) -> bool:
+    """Check if content looks like a function call JSON"""
+    if not content:
+        return False
+    content_str = str(content).strip()
+    return (
+        ("search_doctors" in content_str or "book_appointment" in content_str) and
+        ('"type": "function"' in content_str or '"name":' in content_str)
+    )
+
+
 def handle_user_query(client: FireworksClient, df: pd.DataFrame, query: str,
                      specialties: list, doctor_names: list, 
                      business_units: list, conversation_history: List[Dict[str, str]] = None) -> Tuple[str, List[Dict[str, str]], Optional[str]]:
@@ -48,13 +59,23 @@ def handle_user_query(client: FireworksClient, df: pd.DataFrame, query: str,
         
         # Step 5: No function call - return text response directly
         if message.content:
-            response_text = message.content
+            content_str = str(message.content).strip()
+            
+            # Check if content looks like a function call that was filtered out
+            if is_function_call_content(content_str):
+                print("⚠️ Detected function call in content but it was filtered - generating casual response")
+                # Generate a friendly casual response
+                response_text = "أهلاً وسهلاً! كيف يمكنني مساعدتك اليوم؟ يمكنني مساعدتك في إيجاد الأطباء المناسبين حسب التخصص أو الأعراض."
+            else:
+                response_text = content_str
+            
             new_history = (conversation_history or []) + [
                 {"role": "user", "content": query},
                 {"role": "assistant", "content": response_text}
             ]
             return response_text, new_history, None
         
+        # If we reach here, something went wrong
         error_msg = "⚠️ لم يتم الحصول على رد نصي من النموذج."
         new_history = (conversation_history or []) + [
             {"role": "user", "content": query},
@@ -100,4 +121,3 @@ def handle_user_query(client: FireworksClient, df: pd.DataFrame, query: str,
             {"role": "assistant", "content": error_response}
         ]
         return error_response, new_history, None
-

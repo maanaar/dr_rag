@@ -22,7 +22,13 @@ def parse_function_call(message) -> Tuple[Optional[str], Optional[Dict[str, Any]
             try:
                 args = json.loads(tool_call.function.arguments)
                 print(f"🔍 Parsed {function_name} function arguments: {args}")
-                return function_name, args
+                
+                # Validate that args are not all empty
+                if args and not all(v == "" or v is None for v in args.values()):
+                    return function_name, args
+                else:
+                    print(f"⚠️ All arguments are empty, ignoring function call")
+                    return None, None
             except json.JSONDecodeError as e:
                 print(f"⚠️ Error parsing function arguments: {e}")
                 return None, None
@@ -32,7 +38,7 @@ def parse_function_call(message) -> Tuple[Optional[str], Optional[Dict[str, Any]
         content_str = str(message.content).strip()
         if "search_doctors" in content_str or "book_appointment" in content_str:
             print(f"🔍 Function call found in content, attempting to parse...")
-            print(f"   Content: {content_str}")
+            print(f"   Content: {content_str[:200]}...")  # Limit content display
             
             # Try to parse the entire content as JSON first
             try:
@@ -41,8 +47,14 @@ def parse_function_call(message) -> Tuple[Optional[str], Optional[Dict[str, Any]
                     function_name = func_data["name"]
                     if "parameters" in func_data:
                         args = func_data["parameters"]
-                        print(f"🔍 Extracted {function_name} arguments from JSON content: {args}")
-                        return function_name, args
+                        
+                        # Validate that args are not all empty
+                        if args and not all(v == "" or v is None for v in args.values()):
+                            print(f"🔍 Extracted {function_name} arguments from JSON content: {args}")
+                            return function_name, args
+                        else:
+                            print(f"⚠️ All arguments are empty, ignoring function call")
+                            return None, None
             except json.JSONDecodeError:
                 # Try to extract JSON from content using regex
                 for func_name in ["search_doctors", "book_appointment"]:
@@ -53,8 +65,14 @@ def parse_function_call(message) -> Tuple[Optional[str], Optional[Dict[str, Any]
                             if "parameters" in func_data:
                                 args = func_data["parameters"]
                                 function_name = func_name
-                                print(f"🔍 Extracted {function_name} arguments from regex match: {args}")
-                                return function_name, args
+                                
+                                # Validate that args are not all empty
+                                if args and not all(v == "" or v is None for v in args.values()):
+                                    print(f"🔍 Extracted {function_name} arguments from regex match: {args}")
+                                    return function_name, args
+                                else:
+                                    print(f"⚠️ All arguments are empty, ignoring function call")
+                                    return None, None
                         except json.JSONDecodeError:
                             pass
     
@@ -67,7 +85,7 @@ def normalize_search_args(args: Dict[str, Any]) -> Dict[str, Any]:
     """
     normalized_args = {}
     for key, value in args.items():
-        # Skip empty strings
+        # Skip empty strings, None, and whitespace-only strings
         if not value or (isinstance(value, str) and value.strip() == ""):
             continue
             
@@ -81,4 +99,3 @@ def normalize_search_args(args: Dict[str, Any]) -> Dict[str, Any]:
             normalized_args[key] = value
     
     return normalized_args
-
